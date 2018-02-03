@@ -1,5 +1,5 @@
 # JWT Utils for SilverStripe
-[![Build Status](https://travis-ci.org/JZubero/silverstripe-jwt-utils.svg?branch=master)](https://travis-ci.org/JZubero/silverstripe-jwt-utils)
+[![Build Status](https://travis-ci.org/Level51/silverstripe-jwt-utils.svg?branch=master)](https://travis-ci.org/Level51/silverstripe-jwt-utils)
 
 Lean set of helper classes to deal with JWT in SilverStripe setups. 
 
