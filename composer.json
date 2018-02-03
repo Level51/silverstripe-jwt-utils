@@ -1,7 +1,7 @@
 {
   "name": "level51/silverstripe-jwt-utils",
   "version": "0.1.0",
-  "time": "2018-01-29",
+  "time": "2018-02-03",
   "license": "MIT",
   "type": "silverstripe-module",
   "description": "Utilities for dealing with JWT in SilverStripe",
