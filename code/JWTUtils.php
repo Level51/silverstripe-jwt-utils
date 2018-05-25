@@ -92,6 +92,8 @@ class JWTUtils {
     /**
      * Creates a new token from Basic Auth member data
      *
+     * TODO add param for custom claims
+     *
      * @param bool $includeMemberData
      *
      * @return array
@@ -106,7 +108,51 @@ class JWTUtils {
             throw new JWTUtilsException($e->getResponse()->getBody());
         }
 
-        // Create JWT with all claims
+        return $this->byMember($member, $includeMemberData);
+    }
+
+    /**
+     * Creates a new token from user credentials.
+     *
+     * TODO add param for custom claims
+     *
+     * @param string $uniqueIdentifier @see Member::$unique_identifier_field (Email per default)
+     * @param string $password
+     * @param bool $includeMemberData
+     *
+     * @return array
+     * @throws JWTUtilsException
+     */
+    public function byIdentifierAndPassword($uniqueIdentifier, $password, $includeMemberData = true) {
+        $member = Member::get()->find(Config::inst()->get(Member::class, 'unique_identifier_field'), $uniqueIdentifier);
+
+        // Respond with "wrong credentials" message if the user was not found.
+        if (!$member)
+            throw new JWTUtilsException(_t('Member.ERRORWRONGCRED'));
+
+        try {
+            $result = $member->checkPassword($password);
+        } catch (Exception $e) {
+            throw new JWTUtilsException($e->getMessage());
+        }
+
+        if (!$result->valid())
+            throw new JWTUtilsException($result->message());
+
+        return $this->byMember($member, $includeMemberData);
+    }
+
+    /**
+     * Creates a new token from a given Member object.
+     *
+     * TODO add param for custom claims
+     *
+     * @param Member $member
+     * @param bool $includeMemberData
+     *
+     * @return array
+     */
+    public function byMember($member, $includeMemberData = true) {
         $token = JWT::encode(
             array_merge([
                 'memberId' => $member->ID
