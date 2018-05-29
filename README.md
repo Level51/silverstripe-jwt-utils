@@ -43,6 +43,10 @@ JWTUtils:
   secret: 'my-super-secret'       # Secret for signature. This is mandatory and there is no default value
   lifetime_in_days: 7             # Term of validity
   renew_threshold_in_minutes: 60  # Keep JWT for at least 60 minutes
+  included_member_fields:         # Fields of the member object included in the response 
+    id: ID
+    firstName: FirstName
+    lastName: Surname
 ```
 
 ## API

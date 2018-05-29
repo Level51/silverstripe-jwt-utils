@@ -25,6 +25,16 @@ class JWTUtils {
     private static $instance = null;
 
     /**
+     * @var array Default member fields included in the response
+     */
+    private static $default_member_fields = [
+        'id'        => 'ID',
+        'email'     => 'Email',
+        'firstName' => 'FirstName',
+        'surname'   => 'Surname'
+    ];
+
+    /**
      * @return JWTUtils
      * @throws JWTUtilsException
      */
@@ -87,6 +97,20 @@ class JWTUtils {
             'rat' => time(),
             'jti' => Uuid::uuid4()->toString()
         ];
+    }
+
+    /**
+     * Get the member fields which should be appended to the response.
+     *
+     * Can be set through the "included_member_fields" config, self::$default_member_fields per default.
+     *
+     * @return array
+     */
+    private function getMemberFields() {
+        if ($fields = Config::inst()->get(self::class, 'included_member_fields'))
+            return $fields;
+
+        return self::$default_member_fields;
     }
 
     /**
@@ -165,12 +189,11 @@ class JWTUtils {
 
         // Check if member data should be included
         if ($includeMemberData) {
-            $payload['member'] = [
-                'id'        => $member->ID,
-                'email'     => $member->Email,
-                'firstName' => $member->FirstName,
-                'surname'   => $member->Surname
-            ];
+            $memberData = [];
+            foreach ($this->getMemberFields() as $key => $field) {
+                $memberData[$key] = $member->$field;
+            }
+            $payload['member'] = $memberData;
         }
 
         return $payload;
