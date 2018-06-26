@@ -142,7 +142,7 @@ class JWTUtils {
      *
      * @param string $uniqueIdentifier @see Member::$unique_identifier_field (Email per default)
      * @param string $password
-     * @param bool $includeMemberData
+     * @param bool   $includeMemberData
      *
      * @return array
      * @throws JWTUtilsException
@@ -172,7 +172,7 @@ class JWTUtils {
      * TODO add param for custom claims
      *
      * @param Member $member
-     * @param bool $includeMemberData
+     * @param bool   $includeMemberData
      *
      * @return array
      */
@@ -247,16 +247,24 @@ class JWTUtils {
      * @return bool
      */
     public function check($token) {
+        return $this->decode($token) ? true : false;
+    }
+
+    /**
+     * Try to decode the given token.
+     *
+     * @param string $token
+     *
+     * @return null|object
+     */
+    public function decode($token) {
         try {
-            JWT::decode(
+            return JWT::decode(
                 $token,
                 Config::inst()->get(self::class, 'secret'),
                 ['HS256']);
-
-            return true;
         } catch (Exception $e) {
-
-            return false;
+            return null;
         }
     }
 }
