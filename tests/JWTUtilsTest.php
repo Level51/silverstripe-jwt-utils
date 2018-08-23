@@ -102,7 +102,6 @@ class JWTUtilsTest extends SapphireTest {
         $this->assertTrue(is_array($payload));
         $this->assertEquals(count($payload), 2);
         $this->assertEquals(array_keys($payload)[1], 'member');
-        $this->assertEquals($payload['member']['email'], 'test@test.test');
     }
 
     public function testValidToken() {
@@ -209,6 +208,7 @@ class JWTUtils_TestController extends Controller implements TestOnly {
 
             return Convert::array2json($payload);
         } catch (JWTUtilsException $e) {
+            Debug::dump($e->getMessage());
             return $this->httpError(403, $e->getMessage());
         }
     }

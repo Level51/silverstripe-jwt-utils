@@ -90,13 +90,15 @@ class JWTUtils {
      * @return array
      */
     public function getClaims() {
-        return [
+        $claims = [
             'iss' => Config::inst()->get(self::class, 'iss') ?: Director::absoluteBaseURL(),
             'exp' => $this->calcExpirationClaim(),
             'iat' => time(),
             'rat' => time(),
             'jti' => Uuid::uuid4()->toString()
         ];
+
+        return $claims;
     }
 
     /**
@@ -138,16 +140,15 @@ class JWTUtils {
     /**
      * Creates a new token from user credentials.
      *
-     * TODO add param for custom claims
-     *
      * @param string $uniqueIdentifier @see Member::$unique_identifier_field (Email per default)
      * @param string $password
      * @param bool $includeMemberData
+     * @param array $customClaims
      *
      * @return array
      * @throws JWTUtilsException
      */
-    public function byIdentifierAndPassword($uniqueIdentifier, $password, $includeMemberData = true) {
+    public function byIdentifierAndPassword($uniqueIdentifier, $password, $includeMemberData = true, $customClaims = []) {
         $member = Member::get()->find(Config::inst()->get(Member::class, 'unique_identifier_field'), $uniqueIdentifier);
 
         // Respond with "wrong credentials" message if the user was not found.
@@ -163,25 +164,22 @@ class JWTUtils {
         if (!$result->valid())
             throw new JWTUtilsException($result->message());
 
-        return $this->byMember($member, $includeMemberData);
+        return $this->byMember($member, $includeMemberData, $customClaims);
     }
 
     /**
      * Creates a new token from a given Member object.
      *
-     * TODO add param for custom claims
-     *
      * @param Member $member
      * @param bool $includeMemberData
+     * @param array $customClaims
      *
      * @return array
      */
-    public function byMember($member, $includeMemberData = true) {
-        $token = JWT::encode(
-            array_merge([
-                'memberId' => $member->ID
-            ], $this->getClaims()),
-            Config::inst()->get(self::class, 'secret'));
+    public function byMember($member, $includeMemberData = true, $customClaims = []) {
+        $claims = array_merge($customClaims, $this->getClaims());
+
+        $token = JWT::encode($claims, Config::inst()->get(self::class, 'secret'));
 
         $payload = [
             'token' => $token
@@ -236,7 +234,7 @@ class JWTUtils {
         // Renew and return token
         return JWT::encode(
             $jwt,
-            Config::inst()->get(self::class, 'secret'));
+            'test');
     }
 
     /**
