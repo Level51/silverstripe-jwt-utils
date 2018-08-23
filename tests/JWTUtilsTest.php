@@ -96,12 +96,20 @@ class JWTUtilsTest extends SapphireTest {
         $_SERVER['PHP_AUTH_USER'] = 'test@test.test';
         $_SERVER['PHP_AUTH_PW'] = 'my-test-password';
 
+        // Nest config and remove possible custom member_fields
+        Config::nest();
+        Config::inst()->remove(JWTUtils::class, 'included_member_fields');
+
         // Generate JWT with member data from stub
-        $payload = JWTUtils::inst()->byBasicAuth();
+        $payload = JWTUtils::inst()->byBasicAuth(true);
 
         $this->assertTrue(is_array($payload));
         $this->assertEquals(count($payload), 2);
         $this->assertEquals(array_keys($payload)[1], 'member');
+        $this->assertEquals($payload['member']['email'], 'test@test.test');
+
+        // Revert config changes
+        Config::unnest();
     }
 
     public function testValidToken() {
@@ -192,11 +200,18 @@ class JWTUtilsTest extends SapphireTest {
         $_SERVER['PHP_AUTH_USER'] = 'test@test.test';
         $_SERVER['PHP_AUTH_PW'] = 'my-test-password';
 
+        // Nest injector, register test member class to ensure valid canLogIn result
+        Injector::nest();
+        Injector::inst()->registerService(new JWTUtils_TestMember(), 'Member');
+
         $response = Director::test('JWTUtils_TestController');
         $payload = Convert::json2array($response->getBody());
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertTrue(array_key_exists('token', $payload));
+
+        // Revert injector changes
+        Injector::unnest();
     }
 }
 
@@ -211,5 +226,11 @@ class JWTUtils_TestController extends Controller implements TestOnly {
             Debug::dump($e->getMessage());
             return $this->httpError(403, $e->getMessage());
         }
+    }
+}
+
+class JWTUtils_TestMember extends Member implements TestOnly {
+    public function canLogIn() {
+        return ValidationResult::create();
     }
 }
