@@ -1,5 +1,11 @@
 <?php
 
+namespace Level51\JWTUtils;
+
+use Level51\JWTUtils\JWTUtilsException;
+use SilverStripe\Control\Director;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\Security\BasicAuth;
 use \Firebase\JWT\JWT as JWT;
 use \Carbon\Carbon;
 use \Ramsey\Uuid\Uuid;
@@ -97,11 +103,11 @@ class JWTUtils {
      * @return array
      * @throws JWTUtilsException
      */
-    public function byBasicAuth($includeMemberData = true) {
+    public function byBasicAuth($request, $includeMemberData = true) {
 
         // Try to authenticate member with basic auth
         try {
-            $member = BasicAuth::requireLogin('', null, false);
+            $member = BasicAuth::requireLogin($request, null, false);
         } catch (SS_HTTPResponse_Exception $e) {
             throw new JWTUtilsException($e->getResponse()->getBody());
         }
@@ -145,7 +151,7 @@ class JWTUtils {
                 $token,
                 Config::inst()->get(self::class, 'secret'),
                 ['HS256']);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new JWTUtilsException($e->getMessage());
         }
 
@@ -185,7 +191,7 @@ class JWTUtils {
                 ['HS256']);
 
             return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
 
             return false;
         }

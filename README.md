@@ -6,6 +6,9 @@ Lean set of helper classes to deal with JWT in SilverStripe setups.
 ## Example
 
 ```php
+use Level51\JWTUtils\JWTUtils;
+use Level51\JWTUtils\JWTUtilsException;
+
 class MyTokenController extends Controller {
 
     private static $allowed_actions = ['token'];
@@ -14,7 +17,7 @@ class MyTokenController extends Controller {
         try {
             $payload = JWTUtils::inst()->byBasicAuth();
             
-            return Convert::array2json($payload);
+            return json_encode($payload);
         } catch(JWTUtilsException $e) {
             return $this->httpError(403, $e->getMessage());
         }
@@ -39,7 +42,7 @@ With correct config and credentials there will be a payload like the following:
 ## Config
 
 ```yaml
-JWTUtils:
+Level51\JWTUtils\JWTUtils:
   secret: 'my-super-secret'       # Secret for signature. This is mandatory and there is no default value
   lifetime_in_days: 7             # Term of validity
   renew_threshold_in_minutes: 60  # Keep JWT for at least 60 minutes
