@@ -6,6 +6,7 @@ use Level51\JWTUtils\JWTUtilsException;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Security\BasicAuth;
+use SilverStripe\Control\HTTPResponse_Exception;
 use \Firebase\JWT\JWT as JWT;
 use \Carbon\Carbon;
 use \Ramsey\Uuid\Uuid;
@@ -108,7 +109,7 @@ class JWTUtils {
         // Try to authenticate member with basic auth
         try {
             $member = BasicAuth::requireLogin($request, null, false);
-        } catch (SS_HTTPResponse_Exception $e) {
+        } catch (HTTPResponse_Exception $e) {
             throw new JWTUtilsException($e->getResponse()->getBody());
         }
 
