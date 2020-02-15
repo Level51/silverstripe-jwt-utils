@@ -1,4 +1,6 @@
 <?php
 
-class JWTUtilsException extends Exception {
+namespace Level51\JWTUtils;
+
+class JWTUtilsException extends \Exception {
 }
