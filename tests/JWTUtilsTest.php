@@ -1,5 +1,7 @@
 <?php
 
+namespace Level51\JWTUtils\Tests;
+
 if (Director::isDev()) {
     if (isset($_GET['db']) && ($db = $_GET['db'])) {
         global $databaseConfig;
