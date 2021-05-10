@@ -1,7 +1,5 @@
 {
   "name": "level51/silverstripe-jwt-utils",
-  "version": "0.1.0",
-  "time": "2018-02-03",
   "license": "MIT",
   "type": "silverstripe-vendormodule",
   "description": "Utilities for dealing with JWT in SilverStripe",
@@ -17,13 +15,13 @@
     "ramsey/uuid": "^3.7.3"
   },
   "require-dev": {
-    "phpunit/PHPUnit": "~3.7",
+    "phpunit/phpunit": "~3.7",
     "silverstripe/sqlite3": "^1.4.0"
   },
   "autoload": {
       "psr-4": {
           "Level51\\JWTUtils\\": "code/",
-          "Level51\\JWTUtils\\": "tests/"
+          "Level51\\JWTUtils\\Tests\\": "tests/"
       }
   }
 }
