@@ -2,15 +2,14 @@
 
 namespace Level51\JWTUtils\Tests;
 
-if (Director::isDev()) {
-    if (isset($_GET['db']) && ($db = $_GET['db'])) {
-        global $databaseConfig;
-        if ($db == 'sqlite3') {
-            $databaseConfig['type'] = 'SQLite3Database';
-            $databaseConfig['path'] = ':memory:';
-        }
-    }
-}
+use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Control\Controller;
+use SilverStripe\Control\Director;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Convert;
+use SilverStripe\Dev\TestOnly;
+use Level51\JWTUtils\JWTUtils;
+use Level51\JWTUtils\JWTUtilsException;
 
 class JWTUtilsTest extends SapphireTest {
 
