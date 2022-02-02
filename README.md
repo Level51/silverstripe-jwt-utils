@@ -57,7 +57,7 @@ Level51\JWTUtils\JWTUtils:
 
 ## Tests
 
-`sake dev/tests/JWTUtilsTest db=sqlite3`
+`sake dev/tests/JWTUtilsTest`
 
 ## Todos
 - [ ] Option to en-/decrypt the tokens with extra algorithm, e.g. Blowfish
