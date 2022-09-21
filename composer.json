@@ -23,11 +23,5 @@
           "Level51\\JWTUtils\\": "code/",
           "Level51\\JWTUtils\\Tests\\": "tests/"
       }
-  },
-  "config": {
-    "allow-plugins": {
-      "composer/installers": true,
-      "silverstripe/vendor-plugin": true
-    }
   }
 }
