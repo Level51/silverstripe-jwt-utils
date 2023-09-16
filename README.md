@@ -15,7 +15,7 @@ class MyTokenController extends Controller {
     
     public function token() {
         try {
-            $payload = JWTUtils::inst()->byBasicAuth();
+            $payload = JWTUtils::inst()->byBasicAuth($this->request);
             
             return json_encode($payload);
         } catch(JWTUtilsException $e) {
