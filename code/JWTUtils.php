@@ -71,7 +71,7 @@ class JWTUtils {
      * @return bool
      */
     private function hasValidSecret() {
-        return boolval(Config::inst()->get(self::class, 'secret'));
+        return boolval(Injector::inst()->convertServiceProperty(Config::inst()->get(self::class, 'secret')));
     }
 
     /**
