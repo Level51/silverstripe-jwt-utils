@@ -41,9 +41,11 @@ With correct config and credentials there will be a payload like the following:
 
 ## Config
 
+Make sure to include an environment variable `JWT_SECRET` and pick a random value.
+
 ```yaml
 Level51\JWTUtils\JWTUtils:
-  secret: 'my-super-secret'       # Secret for signature. This is mandatory and there is no default value
+  secret: '`JWT_SECRET`'          # Secret for signature. This is mandatory and there is no default value
   lifetime_in_days: 7             # Term of validity
   renew_threshold_in_minutes: 60  # Keep JWT for at least 60 minutes
 ```
@@ -51,17 +53,9 @@ Level51\JWTUtils\JWTUtils:
 ## API
 
 - `static inst()`: Get singleton instance
-- `byBasicAuth($includeMemberData: bool = true): array`: Creates a new token from Basic Auth member data
+- `byBasicAuth($request, $includeMemberData: bool = true): array`: Creates a new token from Basic Auth member data
 - `renew($token: string): string`: Checks if the given token is valid and needs to be renewed
 - `check($token: string): bool`: Checks if token is valid and non-expired 
-
-## Tests
-
-`sake dev/tests/JWTUtilsTest`
-
-## Todos
-- [ ] Option to en-/decrypt the tokens with extra algorithm, e.g. Blowfish
-- [ ] Tests for time sensitive claims `exp`, `iat`  and `rat`
 
 ## Maintainer
 - JZubero <js@lvl51.de>
