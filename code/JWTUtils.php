@@ -2,13 +2,14 @@
 
 namespace Level51\JWTUtils;
 
-use Level51\JWTUtils\JWTUtilsException;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Security\BasicAuth;
 use SilverStripe\Control\HTTPResponse_Exception;
 use \Firebase\JWT\JWT as JWT;
 use \Carbon\Carbon;
+use Firebase\JWT\Key;
 use \Ramsey\Uuid\Uuid;
 
 /**
@@ -108,7 +109,7 @@ class JWTUtils {
 
         // Try to authenticate member with basic auth
         try {
-            $member = BasicAuth::requireLogin($request, null, false);
+            $member = BasicAuth::requireLogin($request, null, null, false);
         } catch (HTTPResponse_Exception $e) {
             throw new JWTUtilsException($e->getResponse()->getBody());
         }
@@ -118,7 +119,9 @@ class JWTUtils {
             array_merge([
                 'memberId' => $member->ID
             ], $this->getClaims()),
-            Config::inst()->get(self::class, 'secret'));
+            Config::inst()->get(self::class, 'secret'),
+            'HS256'
+        );
 
         $payload = [
             'token' => $token
@@ -150,8 +153,11 @@ class JWTUtils {
         try {
             $jwt = (array)JWT::decode(
                 $token,
-                Config::inst()->get(self::class, 'secret'),
-                ['HS256']);
+                new Key(
+                    Config::inst()->get(self::class, 'secret'),
+                    'HS256'
+                )
+            );
         } catch (\Exception $e) {
             throw new JWTUtilsException($e->getMessage());
         }
@@ -174,7 +180,9 @@ class JWTUtils {
         // Renew and return token
         return JWT::encode(
             $jwt,
-            Config::inst()->get(self::class, 'secret'));
+            Config::inst()->get(self::class, 'secret'),
+            'HS256'
+        );
     }
 
     /**
@@ -188,8 +196,11 @@ class JWTUtils {
         try {
             JWT::decode(
                 $token,
-                Config::inst()->get(self::class, 'secret'),
-                ['HS256']);
+                new Key(
+                    Config::inst()->get(self::class, 'secret'),
+                    'HS256'
+                )
+            );
 
             return true;
         } catch (\Exception $e) {
