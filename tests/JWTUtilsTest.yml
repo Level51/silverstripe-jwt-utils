@@ -2,3 +2,4 @@ Member:
   valid-member:
     Email: test@test.test
     Password: my-test-password
+    PasswordEncryption: none

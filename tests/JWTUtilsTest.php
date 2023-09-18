@@ -3,102 +3,95 @@
 namespace Level51\JWTUtils\Tests;
 
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Control\Controller;
-use SilverStripe\Control\Director;
+use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Config\Config;
-use SilverStripe\Core\Convert;
-use SilverStripe\Dev\TestOnly;
+use SilverStripe\Security\BasicAuth;
 use Level51\JWTUtils\JWTUtils;
 use Level51\JWTUtils\JWTUtilsException;
 
-class JWTUtilsTest extends SapphireTest {
+class JWTUtilsTest extends SapphireTest
+{
 
     protected static $fixture_file = 'JWTUtilsTest.yml';
 
-    private $config;
-    private $origUser;
-    private $origPw;
-
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
 
-        Config::inst()->update(JWTUtils::class, 'secret', 'my-super-secret');
-        $this->config = [
-            'lifetimeInDays' => Config::inst()->get(JWTUtils::class, 'lifetime_in_days'),
-            'renewThreshold' => Config::inst()->get(JWTUtils::class, 'renew_threshold_in_minutes'),
-            'secret'         => Config::inst()->get(JWTUtils::class, 'secret')
-        ];
+        $config = Config::inst();
 
-        $this->origUser = isset($_SERVER['PHP_AUTH_USER']) ? $_SERVER['PHP_AUTH_USER'] : null;
-        $this->origPw = isset($_SERVER['PHP_AUTH_PW']) ? $_SERVER['PHP_AUTH_PW'] : null;
+        $config->set(JWTUtils::class, 'secret', 'my-super-secret');
+        $config->set(BasicAuth::class, 'ignore_cli', false);
     }
 
-    public function tearDown() {
+    public function tearDown(): void
+    {
         parent::tearDown();
 
         JWTUtils::tearDown();
-        $_SERVER['PHP_AUTH_USER'] = $this->origUser;
-        $_SERVER['PHP_AUTH_PW'] = $this->origPw;
     }
 
-    public function testSingleton() {
+    public function testSingleton(): void
+    {
         $inst = JWTUtils::inst();
 
         $this->assertEquals(get_class($inst), JWTUtils::class);
     }
 
-    public function testMissingSecret() {
-        $this->setExpectedException(JWTUtilsException::class);
+    public function testMissingSecret(): void
+    {
+        $this->expectException(JWTUtilsException::class);
 
-        Config::inst()->update(JWTUtils::class, 'secret', null);
+        Config::inst()->set(JWTUtils::class, 'secret', null);
         JWTUtils::inst();
     }
 
-    public function testGetClaims() {
+    public function testGetClaims(): void
+    {
         $claims = JWTUtils::inst()->getClaims();
 
         $this->assertTrue(is_array($claims));
     }
 
-    public function testCustomIssClaim() {
+    public function testCustomIssClaim(): void
+    {
         $iss = 'my-app-backend';
-        Config::inst()->update(JWTUtils::class, 'iss', $iss);
+
+        Config::inst()->set(JWTUtils::class, 'iss', $iss);
+
         $claims = JWTUtils::inst()->getClaims();
 
         $this->assertEquals($claims['iss'], $iss);
     }
 
-    public function testBasicAuthFail() {
-        $this->setExpectedException(JWTUtilsException::class);
+    private function loginByBasicAuth(bool $includeMemberData = true, bool $incorrectPassword = false): mixed
+    {
+        $request = new HTTPRequest('GET', '');
+        $request->addHeader('PHP_AUTH_USER', 'test@test.test');
+        $request->addHeader('PHP_AUTH_PW', $incorrectPassword ? 'my-wrong-password' : 'my-test-password');
 
-        // Mock credentials
-        $_SERVER['PHP_AUTH_USER'] = 'test@test.test';
-        $_SERVER['PHP_AUTH_PW'] = 'my-failed-password';
-
-        JWTUtils::inst()->byBasicAuth();
+        return JWTUtils::inst()->byBasicAuth($request, $includeMemberData);
     }
 
-    public function testBasicAuthSuccess() {
+    public function testBasicAuthFail(): void
+    {
+        $this->expectException(JWTUtilsException::class);
 
-        // Mock credentials
-        $_SERVER['PHP_AUTH_USER'] = 'test@test.test';
-        $_SERVER['PHP_AUTH_PW'] = 'my-test-password';
+        $this->loginByBasicAuth(false, true);
+    }
 
+    public function testBasicAuthSuccess(): void
+    {
         // Generate JWT from member stub
-        $payload = JWTUtils::inst()->byBasicAuth(false);
+        $payload = $this->loginByBasicAuth(false);
 
         $this->assertTrue(is_array($payload));
         $this->assertTrue(array_key_exists('token', $payload));
     }
 
-    public function testBasicAuthWithMemberSuccess() {
-
-        // Mock credentials
-        $_SERVER['PHP_AUTH_USER'] = 'test@test.test';
-        $_SERVER['PHP_AUTH_PW'] = 'my-test-password';
-
-        // Generate JWT with member data from stub
-        $payload = JWTUtils::inst()->byBasicAuth();
+    public function testBasicAuthWithMemberSuccess()
+    {
+        $payload = $this->loginByBasicAuth();
 
         $this->assertTrue(is_array($payload));
         $this->assertEquals(count($payload), 2);
@@ -106,41 +99,30 @@ class JWTUtilsTest extends SapphireTest {
         $this->assertEquals($payload['member']['email'], 'test@test.test');
     }
 
-    public function testValidToken() {
-
-        // Mock credentials
-        $_SERVER['PHP_AUTH_USER'] = 'test@test.test';
-        $_SERVER['PHP_AUTH_PW'] = 'my-test-password';
-
+    public function testValidToken(): void
+    {
         // Generate JWT with member data from stub
-        $payload = JWTUtils::inst()->byBasicAuth();
+        $payload = $this->loginByBasicAuth(false);
 
         $this->assertTrue(JWTUtils::inst()->check($payload['token']));
     }
 
-    public function testInvalidTokenSecret() {
-
-        // Mock credentials
-        $_SERVER['PHP_AUTH_USER'] = 'test@test.test';
-        $_SERVER['PHP_AUTH_PW'] = 'my-test-password';
-
+    public function testInvalidTokenSecret(): void
+    {
         // Generate JWT with member data from stub
-        $payload = JWTUtils::inst()->byBasicAuth();
+        $payload = $this->loginByBasicAuth(false);
 
         // Change secret
-        Config::inst()->update(JWTUtils::class, 'secret', 'other-secret');
+        Config::inst()->set(JWTUtils::class, 'secret', 'other-secret');
 
         $this->assertFalse(JWTUtils::inst()->check($payload['token']));
     }
 
-    public function testDoNotRenew() {
-
-        // Mock credentials
-        $_SERVER['PHP_AUTH_USER'] = 'test@test.test';
-        $_SERVER['PHP_AUTH_PW'] = 'my-test-password';
-
+    public function testDoNotRenew(): void
+    {
         // Generate JWT with member data from stub
-        $payload = JWTUtils::inst()->byBasicAuth();
+        $payload = $this->loginByBasicAuth(false);
+
         $firstToken = $payload['token'];
 
         // Renew attempt: Deliver same token
@@ -149,68 +131,21 @@ class JWTUtilsTest extends SapphireTest {
         $this->assertEquals($firstToken, $renewedToken);
     }
 
-    public function testRenew() {
-
-        // Mock credentials
-        $_SERVER['PHP_AUTH_USER'] = 'test@test.test';
-        $_SERVER['PHP_AUTH_PW'] = 'my-test-password';
-
+    public function testRenew(): void
+    {
         // Generate JWT with member data from stub
-        $payload = JWTUtils::inst()->byBasicAuth();
+        $payload = $this->loginByBasicAuth(false);
+
         $firstToken = $payload['token'];
 
         // Renew attempt: Deliver new token
-        Config::inst()->update(JWTUtils::class, 'renew_threshold_in_minutes', 0);
+        Config::inst()->set(JWTUtils::class, 'renew_threshold_in_minutes', 0);
+
         sleep(1);
+
         $renewedToken = JWTUtils::inst()->renew($firstToken);
 
         $this->assertNotEquals($firstToken, $renewedToken);
     }
 
-    public function testFailedTokenRequestDueToCredentials() {
-
-        // Mock credentials
-        $_SERVER['PHP_AUTH_USER'] = 'test@test.test';
-        $_SERVER['PHP_AUTH_PW'] = 'my-wrong-test-password';
-
-        $response = Director::test('JWTUtils_TestController');
-        $this->assertEquals(403, $response->getStatusCode());
-    }
-
-    public function testFailedTokenRequestDueToMissingSecret() {
-
-        // Mock credentials
-        $_SERVER['PHP_AUTH_USER'] = 'test@test.test';
-        $_SERVER['PHP_AUTH_PW'] = 'my-test-password';
-
-        Config::inst()->update(JWTUtils::class, 'secret', null);
-        $response = Director::test('JWTUtils_TestController');
-        $this->assertEquals(403, $response->getStatusCode());
-    }
-
-    public function testSuccessfulTokenRequest() {
-
-        // Mock credentials
-        $_SERVER['PHP_AUTH_USER'] = 'test@test.test';
-        $_SERVER['PHP_AUTH_PW'] = 'my-test-password';
-
-        $response = Director::test('JWTUtils_TestController');
-        $payload = Convert::json2array($response->getBody());
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertTrue(array_key_exists('token', $payload));
-    }
-}
-
-class JWTUtils_TestController extends Controller implements TestOnly {
-
-    public function index() {
-        try {
-            $payload = JWTUtils::inst()->byBasicAuth();
-
-            return Convert::array2json($payload);
-        } catch (JWTUtilsException $e) {
-            return $this->httpError(403, $e->getMessage());
-        }
-    }
 }
