@@ -3,6 +3,18 @@
 
 Lean set of helper classes to deal with JWT in SilverStripe setups. 
 
+## Install
+
+```
+composer require level51/silverstripe-jwt-utils
+```
+
+| Module Version | PHP Version |
+|----------------|-------------|
+| 1.x            | >=8         |
+| 0.x            | <8          |
+
+
 ## Example
 
 ```php
